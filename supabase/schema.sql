@@ -256,9 +256,29 @@ create policy "trades write" on public.trades for insert with check (auth.uid() 
 -- ═══════════════════════════════════════════════════════════════
 -- Realtime: broadcast feed changes to subscribed clients.
 -- ═══════════════════════════════════════════════════════════════
-alter publication supabase_realtime add table public.posts;
-alter publication supabase_realtime add table public.likes;
-alter publication supabase_realtime add table public.reposts;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'posts'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.posts;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'likes'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.likes;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'reposts'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.reposts;
+  END IF;
+END $$;
 
 -- ═══════════════════════════════════════════════════════════════
 -- Mnemo v2 — additional features
