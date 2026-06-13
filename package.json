@@ -18,7 +18,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lightweight-charts": "^4.2.1",
-    "next": "15.0.3",
+    "next": "^15.1.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "three": "^0.169.0",
@@ -33,5 +33,8 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.6.3"
+  },
+  "overrides": {
+    "three-mesh-bvh": "0.8.0"
   }
 }
