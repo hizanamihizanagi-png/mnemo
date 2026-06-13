@@ -6,7 +6,7 @@ import QuoteHeader from "@/components/market/QuoteHeader";
 import TradeTicket from "@/components/trading/TradeTicket";
 import { getFeed } from "@/lib/data/feed";
 import { getMarketProvider } from "@/lib/market";
-import { lookup } from "@/lib/universe";
+import { lookupAny } from "@/lib/universe";
 
 // ─────────────────────────────────────────────────────────────
 // Symbol detail — the full picture for one ticker.
@@ -35,8 +35,10 @@ export default async function SymbolPage({
     getFeed({ symbol }),
   ]);
 
+  const isIndex = lookupAny(symbol)?.isIndex ?? false;
+
   // Unknown symbol: no universe entry AND no quote → graceful state.
-  if (!quote && !lookup(symbol)) {
+  if (!quote && !lookupAny(symbol)) {
     return (
       <div className="px-4 py-16 text-center sm:px-6">
         <p className="text-3xl font-black text-slate-100">{symbol}</p>
@@ -102,7 +104,17 @@ export default async function SymbolPage({
         <div className="space-y-5">
           <div className="lg:sticky lg:top-16 space-y-5">
             <InsightPanel symbol={symbol} />
-            <TradeTicket symbol={symbol} name={quote.name} price={quote.price} />
+            {isIndex ? (
+              <div className="card p-4 text-sm text-muted">
+                <p className="font-semibold text-slate-200">Market index</p>
+                <p className="mt-1 leading-relaxed">
+                  {quote.name} is an index — not directly tradable. Trade its constituents
+                  from the markets table.
+                </p>
+              </div>
+            ) : (
+              <TradeTicket symbol={symbol} name={quote.name} price={quote.price} />
+            )}
           </div>
         </div>
       </div>

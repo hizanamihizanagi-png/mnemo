@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import type { Region } from "@/lib/types";
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
@@ -45,6 +46,61 @@ export function fmtCurrency(n: number, opts: { compact?: boolean } = {}): string
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(n);
+}
+
+// Format a money amount in an arbitrary ISO currency. Zero fraction
+// digits for the high-magnitude currencies (XOF/XAF/NGN), two for the
+// rest. Falls back to a plain localized number if the currency code is
+// unknown to Intl, so this never throws.
+const ZERO_FRACTION_CURRENCIES = new Set(["XOF", "XAF", "NGN"]);
+
+export function fmtMoney(n: number, currency?: string): string {
+  const cur = (currency ?? "USD").toUpperCase();
+  const fractionDigits = ZERO_FRACTION_CURRENCIES.has(cur) ? 0 : 2;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: cur,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
+    }).format(n);
+  } catch {
+    // Unknown currency code — fall back to a plain number.
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
+    }).format(n);
+  }
+}
+
+// Best-effort default region from the browser's IANA timezone.
+// Client-safe: never throws, defaults to "US".
+export function defaultRegion(): Region {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    switch (tz) {
+      case "Africa/Abidjan":
+      case "Africa/Dakar":
+      case "Africa/Bamako":
+      case "Africa/Lome":
+      case "Africa/Ouagadougou":
+        return "WAEMU";
+      case "Africa/Johannesburg":
+        return "ZA";
+      case "Africa/Lagos":
+        return "NG";
+      case "Africa/Cairo":
+        return "EG";
+      case "Africa/Douala":
+      case "Africa/Libreville":
+      case "Africa/Brazzaville":
+        return "CEMAC";
+      default:
+        return "US";
+    }
+  } catch {
+    return "US";
+  }
 }
 
 export function fmtNumber(n: number, digits = 2): string {

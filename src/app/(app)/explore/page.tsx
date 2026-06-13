@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
+import ReputationBadge from "@/components/social/ReputationBadge";
+import FollowButton from "@/components/social/FollowButton";
 import ExploreSearch, { type SearchEntry } from "@/components/feed/ExploreSearch";
 import { getFeed } from "@/lib/data/feed";
 import { getServerSupabase } from "@/lib/supabase/server";
@@ -97,14 +99,22 @@ export default async function ExplorePage() {
           <ul className="space-y-3">
             {traders.map((t) => (
               <li key={t.id} className="flex items-start gap-3">
-                <Avatar handle={t.handle} src={t.avatar_url} size={44} />
+                <Link href={`/user/${t.handle}`} className="shrink-0">
+                  <Avatar handle={t.handle} src={t.avatar_url} size={44} />
+                </Link>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-slate-100">{t.display_name}</p>
+                  <Link href={`/user/${t.handle}`} className="flex items-center gap-2 hover:underline">
+                    <span className="truncate text-sm font-bold text-slate-100">
+                      {t.display_name}
+                    </span>
+                    <ReputationBadge handle={t.handle} size="sm" />
+                  </Link>
                   <p className="text-xs text-muted">@{t.handle}</p>
                   {t.bio && (
                     <p className="mt-0.5 truncate text-xs text-muted">{t.bio}</p>
                   )}
                 </div>
+                <FollowButton handle={t.handle} size="sm" />
               </li>
             ))}
           </ul>

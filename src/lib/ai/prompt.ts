@@ -1,6 +1,6 @@
 import type { Insight, ModerationResult, Prediction, Sentiment } from "@/lib/types";
 import { clamp } from "@/lib/utils";
-import type { MarketContext } from "./types";
+import type { CopilotContext, MarketContext } from "./types";
 
 const DISCLAIMER =
   "AI-generated analysis for informational purposes only. Not financial advice. Markets are risky; do your own research.";
@@ -31,6 +31,32 @@ Return ONLY this JSON shape (no markdown, no commentary):
   "risk": "the main thing that would invalidate the view"
 }
 Rules: be specific to this ticker; never give personalized advice; frame as informational analysis only.`;
+}
+
+// System persona for the Mnemo finance copilot chat.
+export function buildChatSystemPrompt(ctx?: CopilotContext): string {
+  const lines = [
+    "You are Mnemo Copilot, a concise and sharp markets analyst.",
+    "You cover both US equities and emerging markets across Africa: BRVM (WAEMU/XOF), JSE (South Africa/ZAR), BVMAC (Central Africa/XAF), NGX (Nigeria/NGN), and EGX (Egypt/EGP).",
+    "Be specific and quantitative when you can. Keep answers tight (a few sentences or a short list) and use plain English.",
+    "You provide informational analysis only — NEVER personalized financial advice, and never tell a user to buy or sell.",
+    "When relevant, ground your answer in the live market context provided below.",
+  ];
+
+  if (ctx?.symbols && ctx.symbols.length > 0) {
+    const snapshot = ctx.symbols
+      .map(
+        (s) =>
+          `${s.symbol}: ${s.price.toFixed(2)} (${s.changePct >= 0 ? "+" : ""}${s.changePct.toFixed(2)}%)`,
+      )
+      .join(", ");
+    lines.push(`Live market context: ${snapshot}.`);
+  }
+  if (ctx?.note) {
+    lines.push(`Context note: ${ctx.note}`);
+  }
+
+  return lines.join("\n");
 }
 
 export function buildTopicPrompt(text: string): string {

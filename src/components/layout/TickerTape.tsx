@@ -1,11 +1,20 @@
 import { getMarketProvider } from "@/lib/market";
-import { UNIVERSE } from "@/lib/universe";
-import { fmtPct } from "@/lib/utils";
+import { byRegion, UNIVERSE } from "@/lib/universe";
+import { fmtMoney, fmtPct } from "@/lib/utils";
 
 // Server component: a scrolling market ticker tape across the top.
+// Spans US + a sampling of local exchanges (BRVM, JSE, NGX, EGX).
 export default async function TickerTape() {
+  const picks = [
+    ...UNIVERSE.filter((u) => u.region === "US").slice(0, 8),
+    ...byRegion("WAEMU").slice(0, 2),
+    ...byRegion("ZA").slice(0, 2),
+    ...byRegion("NG").slice(0, 1),
+    ...byRegion("EG").slice(0, 1),
+  ];
+
   const market = getMarketProvider();
-  const quotes = await market.getQuotes(UNIVERSE.slice(0, 14).map((u) => u.symbol));
+  const quotes = await market.getQuotes(picks.map((u) => u.symbol));
   if (quotes.length === 0) return null;
 
   // Duplicate the list so the CSS marquee loops seamlessly.
@@ -19,7 +28,7 @@ export default async function TickerTape() {
           return (
             <span key={i} className="flex items-center gap-2 whitespace-nowrap text-xs">
               <span className="font-bold text-slate-200">{q.symbol}</span>
-              <span className="text-muted">${q.price.toFixed(2)}</span>
+              <span className="text-muted">{fmtMoney(q.price, q.currency)}</span>
               <span className={up ? "text-bull" : "text-bear"}>
                 {up ? "▲" : "▼"} {fmtPct(q.changePct)}
               </span>

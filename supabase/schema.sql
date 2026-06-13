@@ -259,3 +259,125 @@ create policy "trades write" on public.trades for insert with check (auth.uid() 
 alter publication supabase_realtime add table public.posts;
 alter publication supabase_realtime add table public.likes;
 alter publication supabase_realtime add table public.reposts;
+
+-- ═══════════════════════════════════════════════════════════════
+-- Mnemo v2 — additional features
+-- (copilot, strategies, reports, event markets, saved news)
+-- All idempotent and RLS-protected, matching the style above.
+-- ═══════════════════════════════════════════════════════════════
+
+-- ── AI Copilot threads & messages (owner-only) ─────────────────
+create table if not exists public.copilot_threads (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.profiles(id) on delete cascade,
+  title       text not null default 'New chat',
+  model       text not null default 'mnemo-mock',
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists copilot_threads_user_idx on public.copilot_threads (user_id, updated_at desc);
+
+create table if not exists public.copilot_messages (
+  id          uuid primary key default gen_random_uuid(),
+  thread_id   uuid not null references public.copilot_threads(id) on delete cascade,
+  user_id     uuid not null references public.profiles(id) on delete cascade,
+  role        text not null check (role in ('user','assistant','system')),
+  content     text not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists copilot_messages_thread_idx on public.copilot_messages (thread_id, created_at);
+
+-- ── Strategies (owner-only, rules as jsonb) ────────────────────
+create table if not exists public.strategies (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.profiles(id) on delete cascade,
+  name        text not null,
+  description text,
+  rules       jsonb not null default '{}'::jsonb,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists strategies_user_idx on public.strategies (user_id, updated_at desc);
+
+-- ── Reports (owner-only) ───────────────────────────────────────
+create table if not exists public.reports (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.profiles(id) on delete cascade,
+  title       text not null,
+  symbol      text,
+  body        text not null default '',
+  created_at  timestamptz not null default now()
+);
+create index if not exists reports_user_idx on public.reports (user_id, created_at desc);
+
+-- ── Event markets (world-readable) + positions (owner-only) ────
+create table if not exists public.event_markets (
+  id          uuid primary key default gen_random_uuid(),
+  question    text not null,
+  category    text,
+  yes_price   numeric not null default 0.5 check (yes_price between 0 and 1),
+  resolves_at timestamptz,
+  resolved    boolean not null default false,
+  outcome     boolean,
+  created_at  timestamptz not null default now()
+);
+create index if not exists event_markets_created_idx on public.event_markets (created_at desc);
+
+create table if not exists public.event_positions (
+  id          uuid primary key default gen_random_uuid(),
+  market_id   uuid not null references public.event_markets(id) on delete cascade,
+  user_id     uuid not null references public.profiles(id) on delete cascade,
+  side        text not null check (side in ('yes','no')),
+  shares      numeric not null,
+  price       numeric not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists event_positions_user_idx on public.event_positions (user_id, created_at desc);
+
+-- ── Saved news (owner-only) ────────────────────────────────────
+create table if not exists public.news_saved (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.profiles(id) on delete cascade,
+  url         text not null,
+  title       text not null,
+  source      text,
+  symbol      text,
+  created_at  timestamptz not null default now(),
+  unique (user_id, url)
+);
+create index if not exists news_saved_user_idx on public.news_saved (user_id, created_at desc);
+
+-- ── RLS for the new tables ─────────────────────────────────────
+alter table public.copilot_threads  enable row level security;
+alter table public.copilot_messages enable row level security;
+alter table public.strategies       enable row level security;
+alter table public.reports          enable row level security;
+alter table public.event_markets    enable row level security;
+alter table public.event_positions  enable row level security;
+alter table public.news_saved        enable row level security;
+
+-- Copilot: owner-only (private chats).
+drop policy if exists "copilot_threads owner" on public.copilot_threads;
+create policy "copilot_threads owner" on public.copilot_threads for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "copilot_messages owner" on public.copilot_messages;
+create policy "copilot_messages owner" on public.copilot_messages for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Strategies: owner-only.
+drop policy if exists "strategies owner" on public.strategies;
+create policy "strategies owner" on public.strategies for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Reports: owner-only.
+drop policy if exists "reports owner" on public.reports;
+create policy "reports owner" on public.reports for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Event markets: world-readable; positions owner-only.
+drop policy if exists "event_markets read" on public.event_markets;
+create policy "event_markets read" on public.event_markets for select using (true);
+
+drop policy if exists "event_positions owner" on public.event_positions;
+create policy "event_positions owner" on public.event_positions for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Saved news: owner-only.
+drop policy if exists "news_saved owner" on public.news_saved;
+create policy "news_saved owner" on public.news_saved for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

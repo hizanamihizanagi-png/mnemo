@@ -1,5 +1,5 @@
 import type { Quote } from "@/lib/types";
-import { cn, fmtCompact, fmtCurrency, fmtPct } from "@/lib/utils";
+import { cn, fmtCompact, fmtMoney, fmtPct } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────
 // QuoteHeader — the masthead of a symbol detail page.
@@ -34,22 +34,22 @@ export default function QuoteHeader({ quote }: { quote: Quote }) {
 
         <div className="text-right">
           <p className="font-mono text-3xl font-bold leading-none text-slate-100">
-            {fmtCurrency(quote.price)}
+            {fmtMoney(quote.price, quote.currency)}
           </p>
           <p className={cn("mt-1.5 font-mono text-sm font-semibold", up ? "text-bull" : "text-bear")}>
-            {up ? "▲" : "▼"} {fmtCurrency(Math.abs(quote.change))} ({fmtPct(quote.changePct)})
+            {up ? "▲" : "▼"} {fmtMoney(Math.abs(quote.change), quote.currency)} ({fmtPct(quote.changePct)})
           </p>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <Stat label="Open" value={fmtCurrency(quote.open)} />
-        <Stat label="High" value={fmtCurrency(quote.high)} />
-        <Stat label="Low" value={fmtCurrency(quote.low)} />
-        <Stat label="Prev Close" value={fmtCurrency(quote.prevClose)} />
+        <Stat label="Open" value={fmtMoney(quote.open, quote.currency)} />
+        <Stat label="High" value={fmtMoney(quote.high, quote.currency)} />
+        <Stat label="Low" value={fmtMoney(quote.low, quote.currency)} />
+        <Stat label="Prev Close" value={fmtMoney(quote.prevClose, quote.currency)} />
         <Stat
           label="Mkt Cap"
-          value={quote.marketCap ? `$${fmtCompact(quote.marketCap)}` : "—"}
+          value={quote.marketCap ? `${fmtCompact(quote.marketCap)} ${quote.currency}` : "—"}
         />
         <Stat label="Currency" value={quote.currency} />
       </div>

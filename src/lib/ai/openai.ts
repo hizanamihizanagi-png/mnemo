@@ -1,7 +1,7 @@
-import type { Insight, ModerationResult } from "@/lib/types";
+import type { ChatMessage, Insight, ModerationResult } from "@/lib/types";
 import { mockAI } from "./mock";
 import { financeScore } from "./finance-lexicon";
-import type { AIProvider, MarketContext } from "./types";
+import type { AIProvider, CopilotContext, MarketContext } from "./types";
 import { buildInsightPrompt, buildTopicPrompt, parseInsight, parseTopic } from "./prompt";
 
 // ─────────────────────────────────────────────────────────────
@@ -63,5 +63,11 @@ export const openaiAI: AIProvider = {
     const raw = await callOpenAI(buildTopicPrompt(text));
     const parsed = raw ? parseTopic(raw) : null;
     return parsed ?? mockAI.classifyTopic(text);
+  },
+
+  // Copilot chat is not yet wired to OpenAI; delegate to the mock so the
+  // provider still satisfies the AIProvider interface.
+  async chat(messages: ChatMessage[], ctx?: CopilotContext): Promise<string> {
+    return mockAI.chat(messages, ctx);
   },
 };

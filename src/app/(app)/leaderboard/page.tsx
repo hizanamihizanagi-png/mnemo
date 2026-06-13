@@ -1,5 +1,5 @@
 import { getLeaderboard } from "@/lib/data/portfolio";
-import LeaderboardTable from "@/components/trading/LeaderboardTable";
+import LeaderboardTabs from "@/components/trading/LeaderboardTabs";
 
 // ─────────────────────────────────────────────────────────────
 // Leaderboard — ranks every trader by total simulated return.
@@ -16,12 +16,13 @@ export default async function LeaderboardPage() {
       <header>
         <h1 className="text-2xl font-black tracking-tight">Leaderboard</h1>
         <p className="mt-1 text-sm text-muted">
-          Traders ranked by total simulated return on their $100k paper account.
+          Reputation is earned by being right: rank by total simulated return, or
+          by verified prediction accuracy.
         </p>
       </header>
 
       <div className="mt-5">
-        <LeaderboardTable rows={rows} />
+        <LeaderboardTabs rows={rows} />
       </div>
 
       <p className="mt-4 px-1 text-xs leading-relaxed text-muted">

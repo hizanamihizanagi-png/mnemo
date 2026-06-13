@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Avatar from "@/components/ui/Avatar";
 import SentimentBadge from "@/components/ui/SentimentBadge";
+import ReputationBadge from "@/components/social/ReputationBadge";
+import PostChart from "@/components/feed/PostChart";
 import { useSession } from "@/components/auth/SessionProvider";
 import type { Post } from "@/lib/types";
 import { cn, timeAgo } from "@/lib/utils";
@@ -95,12 +97,25 @@ export default function PostCard({ post }: { post: Post }) {
 
   return (
     <article className="flex gap-3 border-b border-line px-4 py-3.5 transition hover:bg-bg-soft/40">
-      <Avatar handle={post.author.handle} src={post.author.avatar_url} size={44} />
+      <Link
+        href={`/user/${post.author.handle}`}
+        onClick={(e) => e.stopPropagation()}
+        className="shrink-0"
+      >
+        <Avatar handle={post.author.handle} src={post.author.avatar_url} size={44} />
+      </Link>
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-          <span className="font-bold text-slate-100">{post.author.display_name}</span>
-          <span className="text-muted">@{post.author.handle}</span>
+          <Link
+            href={`/user/${post.author.handle}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-x-2 hover:underline"
+          >
+            <span className="font-bold text-slate-100">{post.author.display_name}</span>
+            <span className="text-muted">@{post.author.handle}</span>
+          </Link>
+          <ReputationBadge handle={post.author.handle} size="sm" />
           <span className="text-muted">· {timeAgo(post.created_at)}</span>
           <SentimentBadge sentiment={post.sentiment} className="ml-auto" />
         </div>
@@ -108,6 +123,8 @@ export default function PostCard({ post }: { post: Post }) {
         <p className="mt-1 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-200">
           {renderBody(post.body)}
         </p>
+
+        {post.cashtags.length > 0 && <PostChart symbol={post.cashtags[0]} />}
 
         <div className="mt-2.5 flex items-center gap-6 text-muted">
           <Link

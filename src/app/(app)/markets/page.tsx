@@ -1,66 +1,100 @@
-import SectorVizClient from "@/components/three/SectorVizClient";
+import MarketMap from "@/components/market/MarketMap";
 import MarketSearch from "@/components/market/MarketSearch";
 import MarketTable from "@/components/market/MarketTable";
+import RegionTabs from "@/components/market/RegionTabs";
+import IndexCard from "@/components/market/IndexCard";
 import { getMarketProvider } from "@/lib/market";
-import { UNIVERSE } from "@/lib/universe";
-import { fmtNumber, fmtPct } from "@/lib/utils";
+import { byRegion, indicesByRegion, INDICES, REGIONS, UNIVERSE } from "@/lib/universe";
+import type { Region } from "@/lib/types";
 
 // ─────────────────────────────────────────────────────────────
-// Markets index — the trading floor.
+// Markets index — the trading floor, now zone-aware.
 //
-// An indices strip up top, a 3D sector "market map" (reused WebGL
-// component), a debounced search box, and a sortable quote table.
-// Server component: data is fetched from the market provider (mock
-// by default, live when keys are present) so it renders with no keys.
+// A region selector (Global / US / BRVM / JSE / NGX / EGX / BVMAC), a
+// clickable index strip with sparklines, a 2D heatmap (toggle to 3D),
+// search, and a sortable quote table with trend sparklines. Server
+// component — renders with the mock provider (no keys required).
 // ─────────────────────────────────────────────────────────────
 
 export const dynamic = "force-dynamic";
 
-export default async function MarketsPage() {
+const VALID = new Set<string>(REGIONS.map((r) => r.id));
+
+export default async function MarketsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ region?: string }>;
+}) {
+  const { region: rp } = await searchParams;
+  const region: Region | "global" = rp && VALID.has(rp) ? (rp as Region) : "global";
+  const isGlobal = region === "global";
+
+  const stockEntries = isGlobal ? UNIVERSE.filter((u) => u.region === "US") : byRegion(region);
+  const indexEntries = isGlobal ? INDICES : indicesByRegion(region);
+
   const market = getMarketProvider();
-  const [indices, quotes] = await Promise.all([
-    market.getIndices(),
-    market.getQuotes(UNIVERSE.map((u) => u.symbol)),
+  const stockSymbols = stockEntries.map((s) => s.symbol);
+
+  const [quotes, indexQuotes] = await Promise.all([
+    market.getQuotes(stockSymbols),
+    market.getQuotes(indexEntries.map((i) => i.symbol)),
   ]);
+
+  const closesMap: Record<string, number[]> = Object.fromEntries(
+    await Promise.all(
+      stockSymbols.map(
+        async (s) => [s, (await market.getCandles(s, 30)).map((c) => c.close)] as const,
+      ),
+    ),
+  );
+  const indexClosesMap: Record<string, number[]> = Object.fromEntries(
+    await Promise.all(
+      indexQuotes.map(
+        async (q) => [q.symbol, (await market.getCandles(q.symbol, 30)).map((c) => c.close)] as const,
+      ),
+    ),
+  );
+
+  const activeRegion = REGIONS.find((r) => r.id === region);
 
   return (
     <div className="px-4 py-5 sm:px-6">
-      <header className="mb-5">
+      <header className="mb-4">
         <h1 className="text-2xl font-black tracking-tight text-slate-100">Markets</h1>
         <p className="mt-0.5 text-sm text-muted">
-          Explore the universe in 3D, then drill into any ticker for AI insight and paper trading.
+          {activeRegion
+            ? `${activeRegion.flag} ${activeRegion.label} — local indices, movers and AI insight.`
+            : "Global markets — pick a region to surface local exchanges (BRVM, JSE, NGX, EGX, BVMAC)."}
         </p>
       </header>
 
-      {/* Indices strip */}
-      {indices.length > 0 && (
+      {/* Zone selector */}
+      <div className="mb-4">
+        <RegionTabs current={region} />
+      </div>
+
+      {/* Index strip */}
+      {indexQuotes.length > 0 && (
         <div className="mb-5 flex flex-wrap gap-2">
-          {indices.map((idx) => {
-            const up = idx.changePct >= 0;
-            return (
-              <div
-                key={idx.symbol}
-                className="flex min-w-[140px] flex-1 items-center justify-between rounded-xl border border-line bg-bg-card/60 px-3 py-2"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-slate-200">{idx.symbol}</p>
-                  <p className="truncate text-xs text-muted">{idx.name}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-mono text-sm text-slate-100">{fmtNumber(idx.value)}</p>
-                  <p className={`font-mono text-xs ${up ? "text-bull" : "text-bear"}`}>
-                    {up ? "▲" : "▼"} {fmtPct(idx.changePct)}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+          {indexQuotes.map((q) => (
+            <IndexCard
+              key={q.symbol}
+              index={{
+                symbol: q.symbol,
+                name: q.name,
+                value: q.price,
+                changePct: q.changePct,
+                currency: q.currency,
+              }}
+              closes={indexClosesMap[q.symbol]}
+            />
+          ))}
         </div>
       )}
 
-      {/* 3D market map */}
-      <div className="mb-5 h-[420px] overflow-hidden rounded-2xl border border-line bg-bg-soft">
-        <SectorVizClient quotes={quotes} />
+      {/* Market map (2D heatmap / 3D) */}
+      <div className="mb-5">
+        <MarketMap quotes={quotes} />
       </div>
 
       {/* Search */}
@@ -68,8 +102,8 @@ export default async function MarketsPage() {
         <MarketSearch />
       </div>
 
-      {/* Quote table */}
-      <MarketTable quotes={quotes} />
+      {/* Quote table with trend sparklines */}
+      <MarketTable quotes={quotes} closesMap={closesMap} />
     </div>
   );
 }

@@ -1,13 +1,17 @@
+import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
+import ReputationBadge from "@/components/social/ReputationBadge";
+import { demoTrackRecord } from "@/lib/reputation";
 import type { LeaderboardEntry } from "@/lib/types";
 import { cn, fmtCurrency, fmtPct } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────
 // LeaderboardTable — traders ranked by total simulated return.
 //
-// Rank #1–3 get medal styling; each row shows the trader's avatar,
-// display name + @handle, return % (colored bull/bear), and equity.
-// Server component. Works in demo mode (built-in demo rows).
+// Rank #1–3 get medal styling; each row links to the trader's profile
+// and shows avatar, display name + @handle + reputation tier,
+// prediction accuracy, return % (colored bull/bear), and equity.
+// Server-safe (no hooks). Works in demo mode (built-in demo rows).
 // ─────────────────────────────────────────────────────────────
 
 const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
@@ -24,11 +28,12 @@ export default function LeaderboardTable({ rows }: { rows: LeaderboardEntry[] })
   return (
     <section className="card overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[520px] text-sm">
+        <table className="w-full min-w-[560px] text-sm">
           <thead>
             <tr className="border-b border-line text-left text-xs font-medium text-muted">
               <th className="px-5 py-2.5 font-medium">Rank</th>
               <th className="px-3 py-2.5 font-medium">Trader</th>
+              <th className="px-3 py-2.5 text-right font-medium">Accuracy</th>
               <th className="px-3 py-2.5 text-right font-medium">Return</th>
               <th className="px-5 py-2.5 text-right font-medium">Equity</th>
             </tr>
@@ -38,6 +43,7 @@ export default function LeaderboardTable({ rows }: { rows: LeaderboardEntry[] })
               const rank = i + 1;
               const up = row.returnPct >= 0;
               const top = rank <= 3;
+              const tr = demoTrackRecord(row.handle);
               return (
                 <tr
                   key={row.handle}
@@ -57,13 +63,22 @@ export default function LeaderboardTable({ rows }: { rows: LeaderboardEntry[] })
                     </span>
                   </td>
                   <td className="px-3 py-3">
-                    <div className="flex items-center gap-3">
+                    <Link
+                      href={`/user/${row.handle}`}
+                      className="flex items-center gap-3 transition hover:opacity-80"
+                    >
                       <Avatar handle={row.handle} src={row.avatar_url} size={36} />
                       <div className="min-w-0">
-                        <p className="truncate font-semibold text-slate-100">{row.display_name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="truncate font-semibold text-slate-100">{row.display_name}</p>
+                          <ReputationBadge tier={tr.tier} size="sm" />
+                        </div>
                         <p className="truncate text-xs text-muted">@{row.handle}</p>
                       </div>
-                    </div>
+                    </Link>
+                  </td>
+                  <td className="px-3 py-3 text-right font-mono text-slate-200">
+                    {Math.round(tr.accuracy * 100)}%
                   </td>
                   <td className="px-3 py-3 text-right">
                     <span className={cn("font-mono font-semibold", up ? "text-bull" : "text-bear")}>

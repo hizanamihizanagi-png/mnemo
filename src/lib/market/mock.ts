@@ -1,5 +1,5 @@
 import type { Candle, MarketIndex, Quote } from "@/lib/types";
-import { INDICES, lookup, UNIVERSE } from "@/lib/universe";
+import { INDICES, lookupAny, UNIVERSE } from "@/lib/universe";
 import { hashString, mulberry32 } from "@/lib/utils";
 import type { MarketProvider } from "./types";
 
@@ -53,7 +53,9 @@ function intradayAdjust(symbol: string, base: number): number {
 }
 
 function quoteFor(symbol: string): Quote | null {
-  const u = lookup(symbol);
+  // Resolve via lookupAny so ANY symbol — stock or index, any region —
+  // returns a Quote. Indices get sector "Index" and no marketCap.
+  const u = lookupAny(symbol);
   if (!u) return null;
   const series = buildSeries(u.symbol, u.seed, 120);
   const today = series[series.length - 1];
@@ -73,8 +75,9 @@ function quoteFor(symbol: string): Quote | null {
     high: Math.max(today.high, price),
     low: Math.min(today.low, price),
     prevClose,
-    marketCap: price * shares,
-    currency: "USD",
+    // Indices have no market cap; use the entry's local currency.
+    marketCap: u.isIndex ? undefined : price * shares,
+    currency: u.currency,
     sector: u.sector,
   };
 }
@@ -93,7 +96,8 @@ export const mockMarket: MarketProvider = {
   },
 
   async getCandles(symbol, days) {
-    const u = lookup(symbol);
+    // lookupAny resolves stocks AND indices in any region.
+    const u = lookupAny(symbol);
     if (!u) return [];
     const series = buildSeries(u.symbol, u.seed, Math.max(days, 2));
     // Replace the last close with the live intraday price.

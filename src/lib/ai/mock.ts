@@ -1,7 +1,7 @@
-import type { Insight, ModerationResult, Prediction, Sentiment } from "@/lib/types";
+import type { ChatMessage, Insight, ModerationResult, Prediction, Sentiment } from "@/lib/types";
 import { hashString, mulberry32 } from "@/lib/utils";
 import { financeScore } from "./finance-lexicon";
-import type { AIProvider, MarketContext } from "./types";
+import type { AIProvider, CopilotContext, MarketContext } from "./types";
 
 // ─────────────────────────────────────────────────────────────
 // Mock AI provider.
@@ -143,5 +143,44 @@ export const mockAI: AIProvider = {
         ? "Finance-related content."
         : "Mnemo is for markets, stocks, and financial predictions only. Add tickers ($AAPL), market context, or a clear financial angle.",
     };
+  },
+
+  async chat(messages: ChatMessage[], ctx?: CopilotContext): Promise<string> {
+    // Deterministic, helpful-sounding finance answer that reflects the
+    // last user turn and any attached market context. No network needed.
+    const lastUser = [...messages].reverse().find((m) => m.role === "user");
+    const question = (lastUser?.content ?? "").trim();
+    const rand = mulberry32(hashString("chat:" + question));
+
+    const openers = [
+      "Here's how I'd frame it.",
+      "Good question — short version:",
+      "Looking at it from a markets lens,",
+      "At a high level,",
+    ];
+    const opener = openers[Math.floor(rand() * openers.length)];
+
+    let body: string;
+    if (!question) {
+      body =
+        "Ask me about a ticker, a sector, or a macro theme across US or African markets (BRVM, JSE, NGX, EGX, BVMAC) and I'll break down the setup, the drivers, and the key risks.";
+    } else {
+      const ctxSyms = ctx?.symbols ?? [];
+      if (ctxSyms.length > 0) {
+        const movers = ctxSyms
+          .slice(0, 3)
+          .map(
+            (s) =>
+              `${s.symbol} at ${s.price.toFixed(2)} (${s.changePct >= 0 ? "+" : ""}${s.changePct.toFixed(2)}%)`,
+          )
+          .join(", ");
+        const leaning = ctxSyms[0].changePct >= 0 ? "constructive" : "cautious";
+        body = `On "${question.slice(0, 120)}": the names you're watching — ${movers} — point to a ${leaning} near-term tape. Watch volume confirmation, the broader index trend, and any macro catalyst (rates, currency, earnings) that could shift the setup. Position sizing and your time horizon matter more than the call itself.`;
+      } else {
+        body = `On "${question.slice(0, 120)}": the read depends on the trend, volatility, and the macro backdrop. Anchor on the price action versus the moving averages, watch for volume confirmation, and keep an eye on the catalysts (earnings, rates, currency moves) that typically move this kind of name.`;
+      }
+    }
+
+    return `${opener} ${body}\n\n_Not financial advice._`;
   },
 };

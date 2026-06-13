@@ -127,3 +127,45 @@ export interface ModerationResult {
   reason: string;
   topicScore: number; // 0..1 confidence that content is finance-related
 }
+
+// ─────────────────────────────────────────────────────────────
+// Regions & currencies (Mnemo v2 — US + African markets).
+// ─────────────────────────────────────────────────────────────
+export type Region = "US" | "WAEMU" | "ZA" | "CEMAC" | "NG" | "EG";
+export type Currency = "USD" | "XOF" | "ZAR" | "XAF" | "NGN" | "EGP";
+
+// ── Social: follow relationship state for a profile. ───────────
+export interface FollowState {
+  following: boolean;
+  followers: number;
+  following_count: number;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Reputation / track record.
+// ─────────────────────────────────────────────────────────────
+export type ReputationTier = "Rookie" | "Bronze" | "Silver" | "Gold" | "Top 1%";
+
+export interface TrackRecord {
+  accuracy: number; // 0..1 hit rate of resolved predictions
+  alpha: number; // excess return vs. baseline, in percentage points
+  nPredictions: number;
+  nResolved: number;
+  tier: ReputationTier;
+}
+
+// ─────────────────────────────────────────────────────────────
+// AI copilot chat.
+// ─────────────────────────────────────────────────────────────
+export interface ChatMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+  created_at?: string;
+}
+
+export interface ChatModel {
+  id: string;
+  label: string;
+  provider: "gemini" | "openai" | "mock";
+  available: boolean;
+}
