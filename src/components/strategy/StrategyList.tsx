@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 const EXAMPLE_STRATEGIES: (Strategy & { _status: "example" })[] = [
   {
     id: "example-1",
-    name: "AAPL dip buyer (exemple)",
+    name: "AAPL dip buyer (example)",
     symbol: "AAPL",
     capital: 10000,
     entry: { kind: "pctDrop", value: 5 },
@@ -32,7 +32,7 @@ const EXAMPLE_STRATEGIES: (Strategy & { _status: "example" })[] = [
   },
   {
     id: "example-2",
-    name: "Sonatel momentum (exemple)",
+    name: "Sonatel momentum (example)",
     symbol: "SNTS",
     capital: 500000,
     entry: { kind: "smaCross", value: 20 },
@@ -168,7 +168,7 @@ export default function StrategyList() {
 
 function StatusChip({ status }: { status: "example" | "paper" | "live" }) {
   const map = {
-    example: { label: "Exemple", cls: "bg-bg-elevated text-muted" },
+    example: { label: "Example", cls: "bg-bg-elevated text-muted" },
     paper: { label: "Paper", cls: "bg-brand/15 text-brand" },
     live: { label: "Live", cls: "bg-bull/15 text-bull" },
   } as const;

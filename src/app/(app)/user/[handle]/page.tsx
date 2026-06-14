@@ -5,8 +5,8 @@ import {
   getFollowState,
   getProfileByHandle,
   getUserPosts,
-  getUserTrackRecord,
 } from "@/lib/data/profiles";
+import { getUserPredictionLedger } from "@/lib/data/predictions";
 import { getServerSupabase } from "@/lib/supabase/server";
 
 // ─────────────────────────────────────────────────────────────
@@ -36,12 +36,13 @@ export default async function UserProfilePage({
     viewerId = user?.id ?? null;
   }
 
-  const [profile, posts, followState, trackRecord] = await Promise.all([
+  const [profile, posts, followState, ledger] = await Promise.all([
     getProfileByHandle(handle),
     getUserPosts(handle),
     getFollowState(handle, viewerId),
-    getUserTrackRecord(handle),
+    getUserPredictionLedger(handle),
   ]);
+  const trackRecord = ledger.trackRecord;
 
   if (!profile) {
     return (
@@ -76,7 +77,12 @@ export default async function UserProfilePage({
           trackRecord={trackRecord}
           postCount={posts.length}
         />
-        <ProfileTabs posts={posts} trackRecord={trackRecord} handle={profile.handle} />
+        <ProfileTabs
+          posts={posts}
+          trackRecord={trackRecord}
+          records={ledger.records}
+          handle={profile.handle}
+        />
       </div>
     </div>
   );

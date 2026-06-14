@@ -630,8 +630,8 @@ export function getVolatility(region?: string): { value: number; label: string }
 }
 
 function volatilityLabel(value: number): string {
-  if (value < 14) return "Calme";
-  if (value < 22) return "Modérée";
-  if (value < 32) return "Élevée";
-  return "Extrême";
+  if (value < 14) return "Calm";
+  if (value < 22) return "Moderate";
+  if (value < 32) return "Elevated";
+  return "Extreme";
 }

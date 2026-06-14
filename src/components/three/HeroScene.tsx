@@ -1,87 +1,57 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, Environment, AdaptiveDpr } from "@react-three/drei";
 import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { hashString, mulberry32 } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────
-// The hero "3D website" centerpiece: a slowly rotating cloud of
-// glowing candlestick bars + drifting ticker shards, evoking a
-// living market. Pure procedural geometry — no external assets.
+// The hero motif — a single, restrained "market surface".
+//
+// One quiet topographic lattice that breathes like a price field:
+// warm-graphite wireframe lines dissolving into the page through fog.
+// No orb, no emissive glow, no gradient soup — just precise depth.
+// Honors prefers-reduced-motion by freezing into a calm static grid.
 // ─────────────────────────────────────────────────────────────
 
-function Candles({ count = 90 }: { count?: number }) {
+const REDUCED =
+  typeof window !== "undefined" &&
+  typeof window.matchMedia === "function" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function Lattice() {
   const group = useRef<THREE.Group>(null);
-  const bars = useMemo(() => {
-    const rand = mulberry32(hashString("mnemo-hero"));
-    return Array.from({ length: count }, (_, i) => {
-      const angle = (i / count) * Math.PI * 2 + rand() * 0.3;
-      const radius = 4 + rand() * 7;
-      const height = 0.4 + rand() * 3.2;
-      const up = rand() > 0.46;
-      return {
-        position: [
-          Math.cos(angle) * radius,
-          (rand() - 0.5) * 8,
-          Math.sin(angle) * radius,
-        ] as [number, number, number],
-        height,
-        up,
-        speed: 0.2 + rand() * 0.6,
-        phase: rand() * Math.PI * 2,
-      };
-    });
-  }, [count]);
-
-  useFrame((state, delta) => {
-    if (group.current) {
-      group.current.rotation.y += delta * 0.06;
-    }
-  });
-
-  return (
-    <group ref={group}>
-      {bars.map((b, i) => (
-        <Float key={i} speed={b.speed} floatIntensity={0.6} rotationIntensity={0.2}>
-          <mesh position={b.position}>
-            <boxGeometry args={[0.22, b.height, 0.22]} />
-            <meshStandardMaterial
-              color={b.up ? "#16c784" : "#ea3943"}
-              emissive={b.up ? "#0c7a4f" : "#8f1b22"}
-              emissiveIntensity={0.6}
-              roughness={0.35}
-              metalness={0.4}
-            />
-          </mesh>
-        </Float>
-      ))}
-    </group>
+  const geom = useMemo(() => new THREE.PlaneGeometry(38, 24, 56, 36), []);
+  // Snapshot the flat base positions so we can re-derive height each frame.
+  const base = useMemo(
+    () => Float32Array.from(geom.attributes.position.array as Float32Array),
+    [geom],
   );
-}
 
-function CoreOrb() {
-  const ref = useRef<THREE.Mesh>(null);
+  // A smooth sum-of-sines height field — deterministic, no noise lib.
+  const heightAt = (x: number, y: number, t: number) =>
+    Math.sin(x * 0.32 + t) * 0.62 +
+    Math.cos(y * 0.4 + t * 0.8) * 0.5 +
+    Math.sin((x + y) * 0.18 + t * 0.5) * 0.42;
+
   useFrame((state) => {
-    if (ref.current) {
-      const t = state.clock.elapsedTime;
-      const s = 1 + Math.sin(t * 1.2) * 0.04;
-      ref.current.scale.setScalar(s);
+    if (!group.current) return;
+    const t = REDUCED ? 0.6 : state.clock.elapsedTime * 0.32;
+    const pos = geom.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      pos.setZ(i, heightAt(base[i * 3], base[i * 3 + 1], t));
     }
+    pos.needsUpdate = true;
+    // Very slow drift for a faint sense of life (skipped when reduced).
+    if (!REDUCED) group.current.rotation.z = Math.sin(t * 0.1) * 0.04;
   });
+
   return (
-    <mesh ref={ref}>
-      <icosahedronGeometry args={[2.1, 2]} />
-      <meshStandardMaterial
-        color="#38bdf8"
-        emissive="#0ea5e9"
-        emissiveIntensity={0.8}
-        roughness={0.15}
-        metalness={0.6}
-        wireframe
-      />
-    </mesh>
+    <group ref={group} rotation={[-Math.PI / 2.5, 0, 0]} position={[0, -1.6, 0]}>
+      <mesh>
+        <primitive object={geom} attach="geometry" />
+        <meshBasicMaterial color="#4A433B" wireframe transparent opacity={0.55} />
+      </mesh>
+    </group>
   );
 }
 
@@ -89,19 +59,14 @@ export default function HeroScene() {
   return (
     <Canvas
       dpr={[1, 1.8]}
-      camera={{ position: [0, 1.5, 16], fov: 55 }}
+      camera={{ position: [0, 2.4, 10.5], fov: 48 }}
       gl={{ antialias: true, alpha: true }}
+      frameloop={REDUCED ? "demand" : "always"}
     >
       <Suspense fallback={null}>
-        <color attach="background" args={["#05070f"]} />
-        <fog attach="fog" args={["#05070f", 14, 34]} />
-        <ambientLight intensity={0.4} />
-        <pointLight position={[10, 10, 10]} intensity={1.2} color="#7dd3fc" />
-        <pointLight position={[-10, -6, -6]} intensity={0.7} color="#38bdf8" />
-        <CoreOrb />
-        <Candles />
-        <Environment preset="night" />
-        <AdaptiveDpr pixelated />
+        {/* Fog matches the page background so the lattice dissolves at the edges. */}
+        <fog attach="fog" args={["#0B0B0D", 9, 26]} />
+        <Lattice />
       </Suspense>
     </Canvas>
   );

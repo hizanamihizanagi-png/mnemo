@@ -63,7 +63,7 @@ export default async function MarketsPage({
         <h1 className="text-2xl font-black tracking-tight text-slate-100">Markets</h1>
         <p className="mt-0.5 text-sm text-muted">
           {activeRegion
-            ? `${activeRegion.flag} ${activeRegion.label} — local indices, movers and AI insight.`
+            ? `${activeRegion.label} — local indices, movers and AI insight.`
             : "Global markets — pick a region to surface local exchanges (BRVM, JSE, NGX, EGX, BVMAC)."}
         </p>
       </header>

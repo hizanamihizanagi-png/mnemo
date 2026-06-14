@@ -155,6 +155,27 @@ export interface TrackRecord {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Prediction ledger — a logged "call" with an entry, a target, a
+// timeline and a resolution. This is what makes a track record
+// *verifiable* rather than self-reported.
+// ─────────────────────────────────────────────────────────────
+export type PredictionStatus = "open" | "hit" | "missed";
+
+export interface PredictionRecord {
+  id: string;
+  symbol: string;
+  direction: "up" | "down";
+  targetPct: number; // forecast move, signed by direction
+  horizon: "1d" | "1w" | "1m" | "3m";
+  entryPrice: number;
+  createdAt: string; // ISO
+  resolvesAt: string; // ISO — createdAt + horizon
+  status: PredictionStatus;
+  resolvedPrice?: number;
+  realizedPct?: number; // actual % move at resolution, signed
+}
+
+// ─────────────────────────────────────────────────────────────
 // AI copilot chat.
 // ─────────────────────────────────────────────────────────────
 export interface ChatMessage {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import SentimentBadge from "@/components/ui/SentimentBadge";
 import VolatilityWidget from "@/components/news/VolatilityWidget";
+import RegionCode from "@/components/market/RegionCode";
 import type { NewsItem } from "@/lib/data/news";
 import { cn, timeAgo } from "@/lib/utils";
 
@@ -19,13 +20,13 @@ import { cn, timeAgo } from "@/lib/utils";
 
 // Local copy of the region pill metadata. Kept inline rather than
 // importing REGIONS so this client component owns its own selector.
-const REGION_PILLS: { id: string; label: string; flag: string }[] = [
-  { id: "US", label: "US", flag: "🇺🇸" },
-  { id: "WAEMU", label: "BRVM", flag: "🌍" },
-  { id: "ZA", label: "JSE", flag: "🇿🇦" },
-  { id: "NG", label: "NGX", flag: "🇳🇬" },
-  { id: "EG", label: "EGX", flag: "🇪🇬" },
-  { id: "CEMAC", label: "BVMAC", flag: "🌍" },
+const REGION_PILLS: { id: string; label: string; code: string }[] = [
+  { id: "US", label: "US", code: "US" },
+  { id: "WAEMU", label: "BRVM", code: "BRVM" },
+  { id: "ZA", label: "JSE", code: "JSE" },
+  { id: "NG", label: "NGX", code: "NGX" },
+  { id: "EG", label: "EGX", code: "EGX" },
+  { id: "CEMAC", label: "BVMAC", code: "BVMAC" },
 ];
 
 interface Volatility {
@@ -69,7 +70,7 @@ export default function NewsFeed({
       loadedRegion.current = target;
     } catch {
       if (id !== requestId.current) return;
-      setError("Impossible de charger les actualités.");
+      setError("Couldn't load the news right now.");
     } finally {
       if (id === requestId.current) setLoading(false);
     }
@@ -86,7 +87,7 @@ export default function NewsFeed({
       <VolatilityWidget value={volatility.value} label={volatility.label} />
 
       {/* Region selector — owned by this component (inline pills). */}
-      <div className="-mx-1 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Région">
+      <div className="-mx-1 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Region">
         {REGION_PILLS.map((r) => {
           const active = r.id === region;
           return (
@@ -103,7 +104,7 @@ export default function NewsFeed({
                   : "border-line text-muted hover:bg-bg-soft hover:text-slate-200",
               )}
             >
-              <span aria-hidden>{r.flag}</span>
+              <RegionCode code={r.code} />
               <span className="whitespace-nowrap">{r.label}</span>
             </button>
           );
@@ -125,7 +126,7 @@ export default function NewsFeed({
 
       {!loading && news.length === 0 && !error && (
         <p className="px-1 py-8 text-center text-sm text-muted">
-          Aucune actualité pour cette région.
+          No headlines for this region right now.
         </p>
       )}
     </div>
@@ -175,7 +176,7 @@ function NewsCard({ item }: { item: NewsItem }) {
           href={composeHref}
           className="btn-ghost ml-auto px-2.5 py-1 text-xs"
         >
-          Discuter
+          Discuss
         </Link>
       </div>
     </article>

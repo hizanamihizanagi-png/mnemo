@@ -131,14 +131,14 @@ export default function ReportView({
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 print:hidden">
         <div className="min-w-0">
           <h2 className="truncate text-lg font-bold text-slate-100">{report.title}</h2>
-          {dateLabel && <p className="text-xs text-muted">Généré le {dateLabel}</p>}
+          {dateLabel && <p className="text-xs text-muted">Generated {dateLabel}</p>}
         </div>
         <div className="flex shrink-0 gap-2">
           <button type="button" onClick={handlePrint} className="btn btn-ghost text-sm">
-            Imprimer / Exporter
+            Print / Export
           </button>
           <button type="button" onClick={handleDownload} className="btn btn-ghost text-sm">
-            Télécharger .md
+            Download .md
           </button>
         </div>
       </div>
@@ -195,13 +195,13 @@ function slugify(s: string): string {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
-      .slice(0, 60) || "rapport"
+      .slice(0, 60) || "memo"
   );
 }
 
 function formatDate(iso: string): string {
   try {
-    return new Date(iso).toLocaleString("fr-FR", {
+    return new Date(iso).toLocaleString("en-US", {
       day: "2-digit",
       month: "short",
       year: "numeric",

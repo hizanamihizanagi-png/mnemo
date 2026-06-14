@@ -15,10 +15,10 @@ export default async function ReportsPage() {
   return (
     <div className="px-4 py-5 sm:px-6">
       <header className="mb-4">
-        <h1 className="text-2xl font-black tracking-tight text-slate-100">Rapports</h1>
+        <h1 className="text-2xl font-black tracking-tight text-slate-100">Memos</h1>
         <p className="mt-0.5 text-sm text-muted">
-          Générez une note de recherche structurée — marché, valeur ou portefeuille — composée par
-          l&apos;IA. Exportez ou imprimez en un clic.
+          Generate a structured research memo — market, symbol or portfolio — composed by AI. Export
+          or print in one click.
         </p>
       </header>
 

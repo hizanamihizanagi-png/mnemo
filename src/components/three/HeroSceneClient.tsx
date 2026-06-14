@@ -6,9 +6,7 @@ import dynamic from "next/dynamic";
 // import with ssr:false and a lightweight gradient placeholder.
 const HeroScene = dynamic(() => import("./HeroScene"), {
   ssr: false,
-  loading: () => (
-    <div className="h-full w-full animate-pulse bg-gradient-to-br from-bg via-bg-soft to-[#0a1530]" />
-  ),
+  loading: () => <div className="h-full w-full bg-bg" />,
 });
 
 export default function HeroSceneClient() {

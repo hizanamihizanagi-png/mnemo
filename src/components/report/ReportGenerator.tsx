@@ -19,9 +19,9 @@ import { cn } from "@/lib/utils";
 type Kind = "market" | "symbol" | "portfolio";
 
 const KINDS: { id: Kind; label: string; hint: string }[] = [
-  { id: "market", label: "Marché", hint: "Bilan d'une place boursière" },
-  { id: "symbol", label: "Valeur", hint: "Note de recherche sur un titre" },
-  { id: "portfolio", label: "Portefeuille", hint: "Revue de vos positions" },
+  { id: "market", label: "Market", hint: "Overview of an exchange" },
+  { id: "symbol", label: "Symbol", hint: "Research note on a security" },
+  { id: "portfolio", label: "Portfolio", hint: "Review of your positions" },
 ];
 
 export default function ReportGenerator() {
@@ -49,10 +49,10 @@ export default function ReportGenerator() {
       if (data.report) {
         setReport(data.report);
       } else {
-        setError(data.error ?? "Impossible de générer le rapport. Réessayez.");
+        setError(data.error ?? "Unable to generate the memo. Please try again.");
       }
     } catch {
-      setError("Erreur réseau. Réessayez.");
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ export default function ReportGenerator() {
         <div className="mt-4 flex flex-wrap items-end gap-3">
           {kind === "market" && (
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Place boursière</span>
+              <span className="text-muted">Exchange</span>
               <select
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
@@ -94,7 +94,7 @@ export default function ReportGenerator() {
               >
                 {REGIONS.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {r.flag} {r.label}
+                    {r.label}
                   </option>
                 ))}
               </select>
@@ -103,7 +103,7 @@ export default function ReportGenerator() {
 
           {kind === "symbol" && (
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Symbole</span>
+              <span className="text-muted">Symbol</span>
               <input
                 type="text"
                 value={symbol}
@@ -121,7 +121,7 @@ export default function ReportGenerator() {
 
           {kind === "portfolio" && (
             <p className="text-sm text-muted">
-              Basé sur vos titres suivis (ou un panier de démonstration).
+              Based on your watchlisted securities (or a demo basket).
             </p>
           )}
 
@@ -131,7 +131,7 @@ export default function ReportGenerator() {
             disabled={!canGenerate}
             className="btn btn-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Génération…" : "Générer"}
+            {loading ? "Generating…" : "Generate"}
           </button>
         </div>
 

@@ -24,11 +24,11 @@ export default async function NewsPage() {
     <div className="px-4 py-5 sm:px-6">
       <header className="mb-4">
         <h1 className="text-2xl font-black tracking-tight text-slate-100">
-          Actualités &amp; volatilité
+          News &amp; volatility
         </h1>
         <p className="mt-0.5 text-sm text-muted">
-          Macro et marchés par région — Fed, BCEAO, SARB, CBN, EGX — avec un indice
-          de volatilité du jour. Cliquez « Discuter » pour publier votre avis.
+          Macro and markets by region — Fed, BCEAO, SARB, CBN, EGX — with a daily
+          volatility index. Click &ldquo;Discuss&rdquo; to share your take.
         </p>
       </header>
 

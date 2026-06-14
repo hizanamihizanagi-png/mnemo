@@ -34,7 +34,7 @@ export default function VolatilityWidget({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <PulseIcon className={tone.text} />
-          <span className="text-sm font-semibold text-slate-200">Volatilité du marché</span>
+          <span className="text-sm font-semibold text-slate-200">Market volatility</span>
         </div>
         <span className={cn("font-mono text-lg font-bold tabular-nums", tone.text)}>
           {value.toFixed(1)}
@@ -48,7 +48,7 @@ export default function VolatilityWidget({
         aria-valuenow={Math.round(value)}
         aria-valuemin={0}
         aria-valuemax={MAX}
-        aria-label="Indice de volatilité"
+        aria-label="Volatility index"
       >
         <div
           className={cn("h-full rounded-full transition-[width]", tone.bar)}
@@ -57,7 +57,7 @@ export default function VolatilityWidget({
       </div>
 
       <div className="mt-2 flex items-center justify-between text-xs">
-        <span className="text-muted">Indice (jour)</span>
+        <span className="text-muted">Today&apos;s index</span>
         <span className={cn("font-medium", tone.text)}>{label}</span>
       </div>
     </div>

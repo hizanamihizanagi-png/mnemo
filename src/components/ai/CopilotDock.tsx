@@ -7,7 +7,7 @@ import type { ChatMessage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────
-// CopilotDock — app-wide chat dock ("IA partout, façon Claude Code").
+// CopilotDock — the app-wide "Ask Mnemo" dock.
 //
 // A fixed brand FAB at the bottom-right toggles a compact chat panel.
 // History persists to localStorage so the conversation survives page
@@ -22,7 +22,7 @@ const DEFAULT_MODEL =
 const GREETING: ChatMessage = {
   role: "assistant",
   content:
-    "Salut 👋 Je suis Mnemo AI. Je peux analyser les marchés US et africains (BRVM, JSE, NGX, EGX) — tickers, tendances, scénarios. Cite un symbole avec $ (ex. $AAPL, $SNTS) ou pose ta question.",
+    "Ask Mnemo anything about the markets — US and Africa (BRVM, JSE, NGX, EGX). Tickers, trends, scenarios. Mention a symbol with $ (e.g. $AAPL, $SNTS) or just ask.",
 };
 
 function loadHistory(): ChatMessage[] {
@@ -88,12 +88,12 @@ export default function CopilotDock() {
       const reply =
         typeof data.reply === "string" && data.reply.trim()
           ? data.reply
-          : "(copilot indisponible)";
+          : "(Mnemo AI is unavailable right now.)";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "(copilot indisponible)" },
+        { role: "assistant", content: "(Mnemo AI is unavailable right now.)" },
       ]);
     } finally {
       setSending(false);
@@ -122,18 +122,18 @@ export default function CopilotDock() {
             "card max-h-[70vh] overflow-hidden p-0 shadow-glow",
           )}
           role="dialog"
-          aria-label="Mnemo AI copilot"
+          aria-label="Ask Mnemo"
         >
           {/* Header */}
           <header className="flex items-center gap-2 border-b border-line px-3 py-2.5">
-            <SparkIcon className="h-4 w-4 text-brand-glow" />
-            <span className="text-sm font-semibold text-slate-100">Mnemo AI</span>
+            <SparkIcon className="h-4 w-4 text-brand" />
+            <span className="text-sm font-semibold text-slate-100">Ask Mnemo</span>
             <div className="ml-auto flex items-center gap-1.5">
               <ModelPicker value={model} onChange={setModel} />
               <button
                 type="button"
                 onClick={clearChat}
-                title="Nouvelle conversation"
+                title="New conversation"
                 className="rounded-md p-1 text-muted transition-colors hover:text-slate-200"
                 aria-label="Clear conversation"
               >
@@ -142,7 +142,7 @@ export default function CopilotDock() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                title="Fermer"
+                title="Close"
                 className="rounded-md p-1 text-muted transition-colors hover:text-slate-200"
                 aria-label="Close copilot"
               >
@@ -167,7 +167,7 @@ export default function CopilotDock() {
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={onKeyDown}
                 rows={1}
-                placeholder="Demande une analyse… ($AAPL, $NPN, macro…)"
+                placeholder="Ask for an analysis… ($AAPL, $NPN, macro…)"
                 className="input min-h-[40px] max-h-28 flex-1 resize-none py-2 text-sm"
               />
               <button
@@ -181,7 +181,7 @@ export default function CopilotDock() {
               </button>
             </div>
             <p className="mt-1.5 px-0.5 text-[10px] leading-tight text-muted">
-              Mnemo AI peut se tromper. Pas un conseil financier.
+              Mnemo AI can be wrong. Not financial advice.
             </p>
           </div>
         </div>
@@ -191,11 +191,11 @@ export default function CopilotDock() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Close Mnemo AI" : "Open Mnemo AI"}
+        aria-label={open ? "Close Ask Mnemo" : "Open Ask Mnemo"}
         aria-expanded={open}
         className={cn(
           "fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full",
-          "bg-brand text-white shadow-glow transition-transform hover:scale-105 active:scale-95",
+          "bg-brand text-bg shadow-glow transition-transform hover:scale-105 active:scale-95",
         )}
       >
         {open ? <CloseIcon className="h-5 w-5" /> : <SparkIcon className="h-5 w-5" />}
@@ -212,7 +212,7 @@ function Bubble({ message }: { message: ChatMessage }) {
         className={cn(
           "max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm leading-relaxed",
           isUser
-            ? "rounded-br-sm bg-brand text-white"
+            ? "rounded-br-sm bg-brand text-bg"
             : "rounded-bl-sm bg-bg-elevated text-slate-200",
         )}
       >

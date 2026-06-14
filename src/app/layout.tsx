@@ -1,7 +1,30 @@
 import type { Metadata } from "next";
+import { Inter, JetBrains_Mono, Calistoga } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/auth/SessionProvider";
 import { getSessionUser } from "@/lib/supabase/server";
+
+// ── Type system ────────────────────────────────────────────────
+// Inter for precise UI, JetBrains Mono for tabular data, Calistoga
+// as the warm editorial display serif (the "human warmth").
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
+});
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+  weight: ["400", "500", "600"],
+});
+const calistoga = Calistoga({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  weight: ["400"],
+});
 
 export const metadata: Metadata = {
   title: "Mnemo — The Social Network for Markets",
@@ -30,7 +53,10 @@ export default async function RootLayout({
 }) {
   const initialUser = await getSessionUser();
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${inter.variable} ${jetbrainsMono.variable} ${calistoga.variable}`}
+    >
       <body>
         <SessionProvider initialUser={initialUser}>{children}</SessionProvider>
       </body>

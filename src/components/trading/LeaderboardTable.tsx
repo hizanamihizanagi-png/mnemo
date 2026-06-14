@@ -8,13 +8,11 @@ import { cn, fmtCurrency, fmtPct } from "@/lib/utils";
 // ─────────────────────────────────────────────────────────────
 // LeaderboardTable — traders ranked by total simulated return.
 //
-// Rank #1–3 get medal styling; each row links to the trader's profile
-// and shows avatar, display name + @handle + reputation tier,
+// Rank #1–3 get a subtle clay accent; each row links to the trader's
+// profile and shows avatar, display name + @handle + reputation tier,
 // prediction accuracy, return % (colored bull/bear), and equity.
 // Server-safe (no hooks). Works in demo mode (built-in demo rows).
 // ─────────────────────────────────────────────────────────────
-
-const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
 export default function LeaderboardTable({ rows }: { rows: LeaderboardEntry[] }) {
   if (rows.length === 0) {
@@ -55,11 +53,13 @@ export default function LeaderboardTable({ rows }: { rows: LeaderboardEntry[] })
                   <td className="px-5 py-3">
                     <span
                       className={cn(
-                        "inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold",
-                        top ? "text-base" : "bg-bg-soft font-mono text-muted",
+                        "inline-flex h-7 w-7 items-center justify-center rounded-full font-mono text-sm font-bold",
+                        top
+                          ? "border border-brand/40 bg-brand/10 text-brand"
+                          : "bg-bg-soft text-muted",
                       )}
                     >
-                      {MEDALS[rank] ?? rank}
+                      {rank}
                     </span>
                   </td>
                   <td className="px-3 py-3">

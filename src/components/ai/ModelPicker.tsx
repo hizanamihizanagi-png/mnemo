@@ -35,7 +35,7 @@ export default function ModelPicker({
       {AI_MODELS.map((m) => (
         <option key={m.id} value={m.id} className="bg-bg text-slate-200">
           {m.label}
-          {m.available ? "" : " (clé requise)"}
+          {m.available ? "" : " (key required)"}
         </option>
       ))}
     </select>

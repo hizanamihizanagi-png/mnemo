@@ -1,70 +1,121 @@
 "use client";
 
+import type { ReactElement } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/components/auth/SessionProvider";
 import Avatar from "@/components/ui/Avatar";
 
-const NAV = [
-  { href: "/home", label: "Home", icon: HomeIcon },
-  { href: "/markets", label: "Markets", icon: MarketsIcon },
-  { href: "/explore", label: "Explore", icon: ExploreIcon },
-  { href: "/leaderboard", label: "Leaderboard", icon: TrophyIcon },
-  { href: "/portfolio", label: "Portfolio", icon: WalletIcon },
-  { href: "/terminal", label: "Terminal", icon: TerminalIcon },
-  { href: "/strategies", label: "Strategies", icon: StrategiesIcon },
-  { href: "/watchlist", label: "Watchlist", icon: WatchlistIcon },
-  { href: "/news", label: "News", icon: NewsIcon },
-  { href: "/reports", label: "Reports", icon: ReportsIcon },
-  { href: "/events", label: "Events", icon: EventsIcon },
+type NavItem = { href: string; label: string; icon: (p: IconProps) => ReactElement };
+type NavGroup = { pillar: string | null; items: NavItem[] };
+
+// The four pillars (plus the Feed) frame the IA. Every href is an
+// existing route — this is a regrouping, not a migration.
+const NAV_GROUPS: NavGroup[] = [
+  { pillar: null, items: [{ href: "/home", label: "Feed", icon: HomeIcon }] },
+  {
+    pillar: "Research",
+    items: [
+      { href: "/markets", label: "Markets", icon: MarketsIcon },
+      { href: "/explore", label: "Explore", icon: ExploreIcon },
+      { href: "/news", label: "News", icon: NewsIcon },
+      { href: "/reports", label: "Memos", icon: ReportsIcon },
+      { href: "/watchlist", label: "Watchlist", icon: WatchlistIcon },
+    ],
+  },
+  {
+    pillar: "Proof",
+    items: [{ href: "/leaderboard", label: "Leaderboard", icon: TrophyIcon }],
+  },
+  {
+    pillar: "Practice",
+    items: [
+      { href: "/portfolio", label: "Portfolio", icon: WalletIcon },
+      { href: "/strategies", label: "Strategies", icon: StrategiesIcon },
+      { href: "/events", label: "Challenges", icon: EventsIcon },
+    ],
+  },
+  {
+    pillar: "Terminal",
+    items: [{ href: "/terminal", label: "Terminal", icon: TerminalIcon }],
+  },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, configured, signOut } = useSession();
 
+  // "My record" (Proof) points at the signed-in user's public profile.
+  const groups: NavGroup[] = NAV_GROUPS.map((g) =>
+    g.pillar === "Proof" && user
+      ? {
+          ...g,
+          items: [
+            { href: `/user/${user.handle}`, label: "My record", icon: ProofIcon },
+            ...g.items,
+          ],
+        }
+      : g,
+  );
+
   return (
     <aside className="sticky top-0 flex h-screen w-[68px] flex-col items-center gap-1 border-r border-line px-2 py-4 sm:w-60 sm:items-stretch sm:px-3">
-      <Link href="/" className="mb-4 flex items-center gap-2 px-2">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-lg font-black text-bg shadow-glow">
+      <Link href="/" className="mb-5 flex items-center gap-2.5 px-2">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand font-display text-lg leading-none text-bg">
           M
         </span>
-        <span className="hidden text-xl font-black tracking-tight sm:block">
+        <span className="hidden font-display text-2xl leading-none tracking-tight sm:block">
           mnemo
         </span>
       </Link>
 
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
-        {NAV.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition",
-                active
-                  ? "bg-bg-elevated text-brand"
-                  : "text-slate-300 hover:bg-bg-soft hover:text-white",
-              )}
-            >
-              <Icon className="h-5 w-5 shrink-0" />
-              <span className="hidden sm:block">{item.label}</span>
-            </Link>
-          );
-        })}
+      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
+        {groups.map((group, gi) => (
+          <div key={group.pillar ?? "feed"} className={cn(gi > 0 && "mt-3")}>
+            {group.pillar && (
+              <p className="eyebrow mb-1 hidden px-3 sm:block">{group.pillar}</p>
+            )}
+            {group.items.map((item) => {
+              const active =
+                pathname === item.href || pathname.startsWith(item.href + "/");
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2 text-[15px] font-medium transition-colors",
+                    active
+                      ? "bg-bg-elevated text-slate-100"
+                      : "text-slate-400 hover:bg-bg-soft hover:text-slate-100",
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "h-[18px] w-[3px] shrink-0 rounded-full",
+                      active ? "bg-brand" : "bg-transparent",
+                    )}
+                  />
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <span className="hidden sm:block">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        ))}
 
         <Link
           href="/compose"
-          className="mt-3 hidden items-center justify-center rounded-full bg-brand px-4 py-2.5 text-sm font-bold text-bg shadow-glow transition hover:bg-brand-glow sm:flex"
+          className="mt-4 hidden items-center justify-center rounded-full bg-brand px-4 py-2.5 text-sm font-bold text-bg transition-colors hover:bg-brand-glow sm:flex"
         >
           Post insight
         </Link>
         <Link
           href="/compose"
-          className="mt-3 flex items-center justify-center rounded-full bg-brand p-2.5 text-bg shadow-glow sm:hidden"
+          className="mt-4 flex items-center justify-center rounded-full bg-brand p-2.5 text-bg sm:hidden"
           aria-label="Post insight"
         >
           <PlusIcon className="h-5 w-5" />
@@ -137,6 +188,13 @@ function TrophyIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M7 4h10v4a5 5 0 0 1-10 0Z" /><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M9 20h6M12 13v4" />
+    </svg>
+  );
+}
+function ProofIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M9 12.5l2 2 4-4.5" /><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6Z" />
     </svg>
   );
 }

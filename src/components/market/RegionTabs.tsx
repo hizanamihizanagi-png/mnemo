@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { REGIONS } from "@/lib/universe";
+import RegionCode from "@/components/market/RegionCode";
 import { cn } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────
@@ -12,8 +13,8 @@ import { cn } from "@/lib/utils";
 
 export default function RegionTabs({ current }: { current: string }) {
   const tabs = [
-    { id: "global", label: "Global", flag: "🌐", href: "/markets" },
-    ...REGIONS.map((r) => ({ id: r.id, label: r.label, flag: r.flag, href: `/markets?region=${r.id}` })),
+    { id: "global", label: "Global", code: "ALL", href: "/markets" },
+    ...REGIONS.map((r) => ({ id: r.id, label: r.label, code: r.code, href: `/markets?region=${r.id}` })),
   ];
 
   return (
@@ -31,7 +32,7 @@ export default function RegionTabs({ current }: { current: string }) {
                 : "border-line text-muted hover:bg-bg-soft hover:text-slate-200",
             )}
           >
-            <span aria-hidden>{t.flag}</span>
+            <RegionCode code={t.code} />
             <span className="whitespace-nowrap">{t.label}</span>
           </Link>
         );

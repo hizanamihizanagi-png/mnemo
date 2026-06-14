@@ -10,7 +10,7 @@ import { cn, fmtMoney, fmtPct } from "@/lib/utils";
 import type { WatchlistEntry } from "@/lib/data/watchlist";
 
 // ─────────────────────────────────────────────────────────────
-// WatchlistView — "Mes listes" by zone (Slice W, client side).
+// WatchlistView — watchlist by zone (Slice W, client side).
 //
 // Rows are grouped under region headers ("zones") using the REGIONS
 // flag + label. Each row shows symbol → /markets/SYM, name, price,
@@ -78,16 +78,16 @@ export default function WatchlistView({ initial }: { initial: WatchlistEntry[] }
           const data = (await res.json()) as { ok?: boolean; error?: string };
           if (!data.ok) {
             setEntries((prev) => prev.filter((e) => e.quote.symbol !== symbol));
-            setNotice(data.error ?? "Impossible d'ajouter, réessaie.");
+            setNotice(data.error ?? "Couldn't add, please try again.");
             return;
           }
         } catch {
           setEntries((prev) => prev.filter((e) => e.quote.symbol !== symbol));
-          setNotice("Erreur réseau, réessaie.");
+          setNotice("Network error, please try again.");
           return;
         }
       } else {
-        setNotice("Connecte-toi pour sauvegarder.");
+        setNotice("Sign in to save your changes.");
       }
 
       // Fetch the real quote to replace the placeholder.
@@ -120,7 +120,7 @@ export default function WatchlistView({ initial }: { initial: WatchlistEntry[] }
       setEntries((prev) => prev.filter((e) => e.quote.symbol !== symbol));
 
       if (!persists) {
-        setNotice("Connecte-toi pour sauvegarder.");
+        setNotice("Sign in to save your changes.");
         return;
       }
       try {
@@ -131,11 +131,11 @@ export default function WatchlistView({ initial }: { initial: WatchlistEntry[] }
         const data = (await res.json()) as { ok?: boolean; error?: string };
         if (!data.ok) {
           setEntries(prevEntries); // Revert.
-          setNotice(data.error ?? "Impossible de retirer, réessaie.");
+          setNotice(data.error ?? "Couldn't remove, please try again.");
         }
       } catch {
         setEntries(prevEntries); // Revert.
-        setNotice("Erreur réseau, réessaie.");
+        setNotice("Network error, please try again.");
       }
     },
     [entries, persists],
@@ -168,7 +168,7 @@ export default function WatchlistView({ initial }: { initial: WatchlistEntry[] }
 
       {!persists && (
         <p className="text-xs text-muted">
-          Connecte-toi pour sauvegarder tes listes.
+          Sign in to save your watchlists.
         </p>
       )}
 
@@ -183,16 +183,14 @@ export default function WatchlistView({ initial }: { initial: WatchlistEntry[] }
 
       {groups.length === 0 ? (
         <div className="card p-8 text-center text-sm text-muted">
-          Ta liste est vide. Ajoute un symbole ci-dessus.
+          Your watchlist is empty. Add a symbol above.
         </div>
       ) : (
         <div className="flex flex-col gap-6">
           {groups.map((g) => (
             <section key={g.region.id} className="card overflow-hidden p-0">
               <header className="flex items-center gap-2 border-b border-line bg-bg-soft px-4 py-2.5">
-                <span aria-hidden className="text-base leading-none">
-                  {g.region.flag}
-                </span>
+                <span aria-hidden className="rounded border border-line bg-bg-soft px-1 py-0.5 font-mono text-[10px] font-semibold leading-none tracking-wide text-muted">{g.region.code}</span>
                 <h2 className="text-sm font-bold text-slate-200">{g.region.label}</h2>
                 <span className="ml-auto font-mono text-xs text-muted">{g.rows.length}</span>
               </header>
@@ -249,7 +247,7 @@ function WatchRow({ entry, onRemove }: { entry: WatchlistEntry; onRemove: () => 
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`Retirer ${quote.symbol}`}
+        aria-label={`Remove ${quote.symbol}`}
         className="btn-ghost shrink-0 rounded-lg p-1.5 text-muted opacity-0 transition hover:text-bear group-hover:opacity-100 focus:opacity-100"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
@@ -360,7 +358,7 @@ function AddBox({
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          placeholder="Ajouter un symbole à ta liste…"
+          placeholder="Add a symbol to your watchlist…"
           className="input pl-9 font-mono"
           aria-label="Add a symbol to your watchlist"
           autoComplete="off"
@@ -394,7 +392,7 @@ function AddBox({
                       {fmtMoney(q.price, q.currency)}
                     </span>
                     {added ? (
-                      <span className="ml-2 font-mono text-xs text-muted">déjà ajouté</span>
+                      <span className="ml-2 font-mono text-xs text-muted">already added</span>
                     ) : (
                       <span className={cn("ml-2 font-mono text-xs", up ? "text-bull" : "text-bear")}>
                         {fmtPct(q.changePct)}

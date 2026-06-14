@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import PostCard from "@/components/feed/PostCard";
 import ProfilePredictions from "@/components/profile/ProfilePredictions";
-import type { Post, TrackRecord } from "@/lib/types";
+import type { Post, PredictionRecord, TrackRecord } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────
@@ -23,10 +23,12 @@ const TABS: { id: Tab; label: string }[] = [
 export default function ProfileTabs({
   posts,
   trackRecord,
+  records,
   handle,
 }: {
   posts: Post[];
   trackRecord: TrackRecord;
+  records: PredictionRecord[];
   handle: string;
 }) {
   const [tab, setTab] = useState<Tab>("posts");
@@ -67,7 +69,9 @@ export default function ProfileTabs({
           </div>
         ))}
 
-      {tab === "predictions" && <ProfilePredictions trackRecord={trackRecord} posts={posts} />}
+      {tab === "predictions" && (
+        <ProfilePredictions trackRecord={trackRecord} records={records} />
+      )}
 
       {tab === "portfolio" && (
         <div className="card p-8 text-center">

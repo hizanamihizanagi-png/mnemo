@@ -106,13 +106,15 @@ export const ALL_INDICES: IndexEntry[] = [
 ];
 
 // ── Regions metadata for pickers / headers. ────────────────────
-export const REGIONS: { id: Region; label: string; flag: string; currency: Currency }[] = [
-  { id: "US", label: "United States", flag: "🇺🇸", currency: "USD" },
-  { id: "WAEMU", label: "West Africa - BRVM", flag: "🌍", currency: "XOF" },
-  { id: "ZA", label: "South Africa - JSE", flag: "🇿🇦", currency: "ZAR" },
-  { id: "CEMAC", label: "Central Africa - BVMAC", flag: "🌍", currency: "XAF" },
-  { id: "NG", label: "Nigeria - NGX", flag: "🇳🇬", currency: "NGN" },
-  { id: "EG", label: "Egypt - EGX", flag: "🇪🇬", currency: "EGP" },
+// `code` is the short exchange/region tag shown as a restrained mono
+// badge in pickers (terminal precision — no emoji flags).
+export const REGIONS: { id: Region; label: string; code: string; currency: Currency }[] = [
+  { id: "US", label: "United States", code: "US", currency: "USD" },
+  { id: "WAEMU", label: "West Africa - BRVM", code: "BRVM", currency: "XOF" },
+  { id: "ZA", label: "South Africa - JSE", code: "JSE", currency: "ZAR" },
+  { id: "CEMAC", label: "Central Africa - BVMAC", code: "BVMAC", currency: "XAF" },
+  { id: "NG", label: "Nigeria - NGX", code: "NGX", currency: "NGN" },
+  { id: "EG", label: "Egypt - EGX", code: "EGX", currency: "EGP" },
 ];
 
 const BY_SYMBOL = new Map(UNIVERSE.map((u) => [u.symbol, u]));

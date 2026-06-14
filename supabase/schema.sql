@@ -83,6 +83,14 @@ create table if not exists public.predictions (
 );
 create index if not exists predictions_symbol_idx on public.predictions (symbol, created_at desc);
 
+-- v3: prediction-ledger lifecycle (entry price + resolution) so reputation
+-- is computed from *verified* outcomes, not volume. Additive + idempotent.
+alter table public.predictions add column if not exists entry_price    numeric;
+alter table public.predictions add column if not exists resolved        boolean not null default false;
+alter table public.predictions add column if not exists outcome         boolean;
+alter table public.predictions add column if not exists resolved_price  numeric;
+alter table public.predictions add column if not exists resolved_at     timestamptz;
+
 -- ── Paper portfolios ───────────────────────────────────────────
 create table if not exists public.portfolios (
   user_id       uuid primary key references public.profiles(id) on delete cascade,

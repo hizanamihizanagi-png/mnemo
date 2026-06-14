@@ -52,7 +52,7 @@ export default function LeaderboardTabs({ rows }: { rows: LeaderboardEntry[] }) 
               className={cn(
                 "rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors",
                 active
-                  ? "bg-bg-elevated text-slate-100 shadow-glow"
+                  ? "bg-bg-elevated text-slate-100"
                   : "text-muted hover:text-slate-200",
               )}
             >

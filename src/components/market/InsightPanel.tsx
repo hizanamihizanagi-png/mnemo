@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import SentimentBadge from "@/components/ui/SentimentBadge";
+import { useSession } from "@/components/auth/SessionProvider";
 import type { Insight } from "@/lib/types";
 import { cn, fmtPct } from "@/lib/utils";
 
@@ -22,9 +24,53 @@ const HORIZON_LABEL: Record<string, string> = {
 };
 
 export default function InsightPanel({ symbol }: { symbol: string }) {
+  const router = useRouter();
+  const { user, configured } = useSession();
   const [insight, setInsight] = useState<Insight | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [logState, setLogState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [logMsg, setLogMsg] = useState<string | null>(null);
+
+  const logCall = useCallback(async () => {
+    if (!insight) return;
+    if (!configured || !user) {
+      router.push(`/login?next=/markets/${symbol}`);
+      return;
+    }
+    setLogState("saving");
+    setLogMsg(null);
+    try {
+      const p = insight.prediction;
+      const res = await fetch("/api/predictions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          symbol,
+          direction: p.direction,
+          targetPct: p.targetPct,
+          confidence: p.confidence,
+          horizon: p.horizon,
+          rationale: p.rationale,
+          model: p.model,
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { saved?: boolean; demo?: boolean; error?: string }
+        | null;
+      if (!res.ok) throw new Error(data?.error ?? "Could not save");
+      if (data?.demo) {
+        setLogState("idle");
+        setLogMsg("Connect an account to save calls to your ledger.");
+        return;
+      }
+      setLogState("saved");
+      setLogMsg("Logged — we'll score it when the horizon passes.");
+    } catch (e) {
+      setLogState("error");
+      setLogMsg(e instanceof Error ? e.message : "Could not save.");
+    }
+  }, [insight, configured, user, router, symbol]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,6 +132,33 @@ export default function InsightPanel({ symbol }: { symbol: string }) {
           </div>
 
           <PredictionBlock insight={insight} />
+
+          {/* Log to ledger — the bridge from insight to a verified record. */}
+          <div>
+            <button
+              onClick={() => void logCall()}
+              disabled={logState === "saving" || logState === "saved"}
+              className="btn-primary w-full"
+            >
+              {logState === "saved"
+                ? "Logged to your ledger"
+                : logState === "saving"
+                  ? "Logging…"
+                  : "Log this call"}
+            </button>
+            {logMsg && (
+              <p
+                className={cn(
+                  "mt-1.5 text-xs leading-relaxed",
+                  logState === "error" ? "text-bear" : "text-muted",
+                )}
+                role="status"
+                aria-live="polite"
+              >
+                {logMsg}
+              </p>
+            )}
+          </div>
 
           {insight.bullets.length > 0 && (
             <div>
