@@ -5,6 +5,7 @@ import { getMarketProvider } from "@/lib/market";
 import { UNIVERSE } from "@/lib/universe";
 import type { ChatMessage } from "@/lib/types";
 import { extractCashtags } from "@/lib/utils";
+import { getLeaderboard } from "@/lib/data/portfolio";
 
 export const dynamic = "force-dynamic";
 
@@ -84,7 +85,62 @@ async function buildContext(lastUserText: string): Promise<CopilotContext> {
       price: q.price,
       changePct: q.changePct,
     }));
-    return { symbols };
+
+    // Fetch leaderboard standings (top 3)
+    const leaderboardRows = await getLeaderboard(3).catch(() => []);
+    const leaderboard = leaderboardRows.map((l) => ({
+      handle: l.handle,
+      display_name: l.display_name,
+      returnPct: l.returnPct,
+    }));
+
+    // Fetch recent sentiment for parsed cashtags
+    const sentiment: CopilotContext["sentiment"] = [];
+    if (cashtags.length > 0) {
+      const supabase = await getServerSupabase();
+      if (supabase) {
+        const { data: recentPosts } = await supabase
+          .from("posts")
+          .select("sentiment, cashtags")
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (recentPosts) {
+          for (const tag of cashtags) {
+            let bullish = 0, bearish = 0, neutral = 0;
+            for (const post of recentPosts) {
+              const tags = Array.isArray(post.cashtags) ? post.cashtags : [];
+              if (tags.some((t: string) => t.toUpperCase() === tag)) {
+                if (post.sentiment === "bullish") bullish++;
+                else if (post.sentiment === "bearish") bearish++;
+                else neutral++;
+              }
+            }
+            if (bullish > 0 || bearish > 0 || neutral > 0) {
+              sentiment.push({ symbol: tag, bullish, bearish, neutral });
+            }
+          }
+        }
+      } else {
+        const { getFeed } = await import("@/lib/data/feed");
+        const feed = await getFeed();
+        for (const tag of cashtags) {
+          let bullish = 0, bearish = 0, neutral = 0;
+          for (const post of feed) {
+            if (post.cashtags.some((t) => t.toUpperCase() === tag)) {
+              if (post.sentiment === "bullish") bullish++;
+              else if (post.sentiment === "bearish") bearish++;
+              else neutral++;
+            }
+          }
+          if (bullish > 0 || bearish > 0 || neutral > 0) {
+            sentiment.push({ symbol: tag, bullish, bearish, neutral });
+          }
+        }
+      }
+    }
+
+    return { symbols, leaderboard, sentiment };
   } catch {
     return {};
   }

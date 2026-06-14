@@ -14,6 +14,8 @@ export interface MarketContext {
 export interface CopilotContext {
   symbols?: { symbol: string; price: number; changePct: number }[];
   note?: string;
+  leaderboard?: { handle: string; display_name: string; returnPct: number }[];
+  sentiment?: { symbol: string; bullish: number; bearish: number; neutral: number }[];
 }
 
 export interface AIProvider {

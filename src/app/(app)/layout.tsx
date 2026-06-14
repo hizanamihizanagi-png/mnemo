@@ -12,7 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="mx-auto flex w-full max-w-[1280px]">
         <Sidebar />
 
-        <div className="flex min-h-screen min-w-0 flex-1 flex-col border-x border-line">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col border-x border-line pb-16 md:pb-0">
           <div className="sticky top-0 z-20 backdrop-blur">
             <Suspense fallback={<div className="h-[37px] border-b border-line bg-bg-soft/80" />}>
               <TickerTape />

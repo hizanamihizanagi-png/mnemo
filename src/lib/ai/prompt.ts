@@ -40,7 +40,7 @@ export function buildChatSystemPrompt(ctx?: CopilotContext): string {
     "You cover both US equities and emerging markets across Africa: BRVM (WAEMU/XOF), JSE (South Africa/ZAR), BVMAC (Central Africa/XAF), NGX (Nigeria/NGN), and EGX (Egypt/EGP).",
     "Be specific and quantitative when you can. Keep answers tight (a few sentences or a short list) and use plain English.",
     "You provide informational analysis only — NEVER personalized financial advice, and never tell a user to buy or sell.",
-    "When relevant, ground your answer in the live market context provided below.",
+    "When relevant, ground your answer in the live market context and social network signals provided below.",
   ];
 
   if (ctx?.symbols && ctx.symbols.length > 0) {
@@ -52,6 +52,21 @@ export function buildChatSystemPrompt(ctx?: CopilotContext): string {
       .join(", ");
     lines.push(`Live market context: ${snapshot}.`);
   }
+
+  if (ctx?.leaderboard && ctx.leaderboard.length > 0) {
+    const list = ctx.leaderboard
+      .map((u) => `@${u.handle} (${u.display_name}) with simulated return of ${u.returnPct.toFixed(2)}%`)
+      .join(", ");
+    lines.push(`Top traders on Mnemo right now (leaderboard): ${list}.`);
+  }
+
+  if (ctx?.sentiment && ctx.sentiment.length > 0) {
+    const sents = ctx.sentiment
+      .map((s) => `$${s.symbol}: ${s.bullish} bullish, ${s.bearish} bearish, ${s.neutral} neutral insights posted recently`)
+      .join("; ");
+    lines.push(`Aggregated platform sentiment for queried assets: ${sents}.`);
+  }
+
   if (ctx?.note) {
     lines.push(`Context note: ${ctx.note}`);
   }
